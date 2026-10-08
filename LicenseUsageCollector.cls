@@ -57,8 +57,9 @@ public with sharing class LicenseUsageCollector {
     /** Called by the existing LicenseUsageQueueable. */
     public static void collectOrg(License_Source_Org__mdt config) {
         validateConfig(config);
-        collectLicenseTotals(config);
+        List<License_Usage__c> totals = getLicenseTotals(config);
         collectUserPage(config, null);
+        saveLicenseTotals(totals);
     }
 
     /** Collects exactly one REST query page, then chains a Queueable if more exist. */
@@ -109,7 +110,7 @@ public with sharing class LicenseUsageCollector {
         }
     }
 
-    private static void collectLicenseTotals(License_Source_Org__mdt config) {
+    private static List<License_Usage__c> getLicenseTotals(License_Source_Org__mdt config) {
         String soql = 'SELECT Id, Name, TotalLicenses, UsedLicenses, Status FROM UserLicense';
         UserLicenseResponse response = (UserLicenseResponse) JSON.deserialize(
             sendQuery(config, API_PREFIX + EncodingUtil.urlEncode(soql, 'UTF-8')),
@@ -136,6 +137,10 @@ public with sharing class LicenseUsageCollector {
             row.External_Key__c = config.DeveloperName + '|' + licenseRecord.Id;
             usage.add(row);
         }
+        return usage;
+    }
+
+    private static void saveLicenseTotals(List<License_Usage__c> usage) {
         if (!usage.isEmpty()) {
             if (!Schema.sObjectType.License_Usage__c.isCreateable() ||
                 !Schema.sObjectType.License_Usage__c.isUpdateable()) {
