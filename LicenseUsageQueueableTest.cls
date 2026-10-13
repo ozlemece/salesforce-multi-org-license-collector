@@ -18,7 +18,7 @@ private class LicenseUsageQueueableTest {
                 return response;
             }
             response.setStatusCode(200);
-            if (request.getEndpoint().contains('UserLicense')) {
+            if (EncodingUtil.urlDecode(request.getEndpoint(), 'UTF-8').contains('FROM UserLicense')) {
                 response.setBody('{"totalSize":1,"done":true,"records":[' +
                     '{"Id":"' + LICENSE_ID + '","Name":"Salesforce",' +
                     '"TotalLicenses":50,"UsedLicenses":25,"Status":"Active"}]}');
