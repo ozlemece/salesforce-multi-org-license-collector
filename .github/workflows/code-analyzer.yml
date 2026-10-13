@@ -1,0 +1,35 @@
+name: Salesforce Code Analyzer
+on:
+  workflow_dispatch:
+  push:
+    branches: [code-analyzer-setup]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Salesforce CLI
+        run: npm install --global @salesforce/cli
+      - name: Install Salesforce Code Analyzer
+        run: sf plugins install @salesforce/plugin-code-analyzer
+      - name: Analyze Apex
+        run: sf code-analyzer run --workspace . --output-file code-analyzer-results.html
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-analyzer-results
+          path: code-analyzer-results.html
+          if-no-files-found: warn
